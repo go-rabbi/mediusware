@@ -17,8 +17,6 @@ def productlist(request):
     price_to = request.GET.get('price_to')
     date = request.GET.get('date')
 
-    print(variant)
-
     # Filter the ProductVariantPrice queryset based on form inputs
     filtered_prices = ProductVariantPrice.objects.all()
 
@@ -31,7 +29,6 @@ def productlist(request):
             Q(product_variant_two__variant_title__icontains=variant) |
             Q(product_variant_three__variant_title__icontains=variant)
         )
-    print(filtered_prices)
 
     if price_from:
         filtered_prices = filtered_prices.filter(price__gte=price_from)
@@ -90,6 +87,18 @@ def productlist(request):
         tem_dict['variant']=tem_arr
         product_detailes.append(tem_dict)
 
+    all_product_variants = ProductVariant.objects.all()
+    variant_size=[]
+    variant_color=[]
+    variant_style=[]
+    for prodct_variant in all_product_variants:
+        if prodct_variant.variant.title=="Size":
+            variant_size.append(prodct_variant.variant_title)
+        elif prodct_variant.variant.title=="Color":
+            variant_color.append(prodct_variant.variant_title)
+        else:
+            variant_style.append(prodct_variant.variant_title)
+
     items_per_page = 5
     paginator = Paginator(product_detailes, items_per_page)
     page_number = request.GET.get('page')
@@ -100,5 +109,8 @@ def productlist(request):
         "products/list.html",
         {
             "page_obj": page_obj,
+            "variant_size": variant_size,
+            "variant_color": variant_color,
+            "variant_style": variant_style,
         },
     )
