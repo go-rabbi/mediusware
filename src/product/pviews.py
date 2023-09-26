@@ -1,17 +1,48 @@
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator
-
+from django.db.models import Q
 
 from product.models import *
 
 
 def productlist(request):
-    all_product=Product.objects.all()
+    #all_product=Product.objects.all()
     #all_variant=Variant.objects.all()
     #all_productimage=ProductImage.objects.all()
     #all_productvariant=ProductVariant.objects.all()
-    all_productvariantprice=ProductVariantPrice.objects.all()
+    title = request.GET.get('title')
+    variant = request.GET.get('variant')
+    price_from = request.GET.get('price_from')
+    price_to = request.GET.get('price_to')
+    date = request.GET.get('date')
+
+    print(variant)
+
+    # Filter the ProductVariantPrice queryset based on form inputs
+    filtered_prices = ProductVariantPrice.objects.all()
+
+    if title:
+        filtered_prices = filtered_prices.filter(product__title__icontains=title)
+
+    if variant:
+        filtered_prices = filtered_prices.filter(
+            Q(product_variant_one__variant_title__icontains=variant) |
+            Q(product_variant_two__variant_title__icontains=variant) |
+            Q(product_variant_three__variant_title__icontains=variant)
+        )
+    print(filtered_prices)
+
+    if price_from:
+        filtered_prices = filtered_prices.filter(price__gte=price_from)
+
+    if price_to:
+        filtered_prices = filtered_prices.filter(price__lte=price_to)
+
+    if date:
+        filtered_prices = filtered_prices.filter(created_at__date=date)
+
+    all_productvariantprice=filtered_prices
     
     product_details_dict={}
     id=0
